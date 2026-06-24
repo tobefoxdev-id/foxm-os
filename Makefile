@@ -25,7 +25,7 @@ FREERTOS = Core/FreeRTOS
 INCLUDES  = -ICore
 INCLUDES += -ICore/Kernel
 INCLUDES += -I$(FREERTOS)/include
-INCLUDES += -I$(FREERTOS)/portable/GCC/ARM_CM4F
+INCLUDES += -I$(FREERTOS)/portable/GCC/ARM_CM3
 INCLUDES += -IDrivers/ir
 INCLUDES += -IUI/cli
 INCLUDES += -IPlugins
@@ -37,7 +37,7 @@ FREERTOS_SRCS += $(FREERTOS)/queue.c
 FREERTOS_SRCS += $(FREERTOS)/list.c
 FREERTOS_SRCS += $(FREERTOS)/timers.c
 FREERTOS_SRCS += $(FREERTOS)/event_groups.c
-FREERTOS_SRCS += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
+FREERTOS_SRCS += $(FREERTOS)/portable/GCC/ARM_CM3/port.c
 FREERTOS_SRCS += $(FREERTOS)/portable/MemMang/heap_4.c
 
 # Project Source Files
