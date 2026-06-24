@@ -60,7 +60,7 @@ OBJS = $(ALL_SRCS:.c=.o)
 all: $(TARGET).elf
 
 $(TARGET).elf: $(OBJS)
-	$(CC) $(CPU_FLAGS) $(OBJS) -o $@
+	$(CC) $(CPU_FLAGS) $(OBJS) --specs=nosys.specs -o $@
 	$(SIZE) $@
 
 %.o: %.c
