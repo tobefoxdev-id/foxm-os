@@ -42,7 +42,7 @@ FREERTOS_SRCS += $(FREERTOS)/portable/MemMang/heap_4.c
 
 # Project Source Files
 SRCS  = Core/startup.c
-SRCS += Core/main.c
+SRCS += Core/main_test.c
 SRCS += Core/Kernel/app_manager.c
 SRCS += Core/Kernel/event_system.c
 SRCS += Core/Kernel/power_manager.c
