@@ -18,15 +18,29 @@ CPU_FLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS  = $(CPU_FLAGS) -O0 -g -Wall
 CFLAGS += -DSTM32F4
 
+# FreeRTOS Path
+FREERTOS = Core/FreeRTOS
+
 # Include Paths
 INCLUDES  = -ICore
 INCLUDES += -ICore/Kernel
+INCLUDES += -I$(FREERTOS)/include
+INCLUDES += -I$(FREERTOS)/portable/GCC/ARM_CM4F
 INCLUDES += -IDrivers/ir
 INCLUDES += -IUI/cli
 INCLUDES += -IPlugins
 INCLUDES += -IConfig
 
-# Source Files
+# FreeRTOS Source Files
+FREERTOS_SRCS  = $(FREERTOS)/tasks.c
+FREERTOS_SRCS += $(FREERTOS)/queue.c
+FREERTOS_SRCS += $(FREERTOS)/list.c
+FREERTOS_SRCS += $(FREERTOS)/timers.c
+FREERTOS_SRCS += $(FREERTOS)/event_groups.c
+FREERTOS_SRCS += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
+FREERTOS_SRCS += $(FREERTOS)/portable/MemMang/heap_4.c
+
+# Project Source Files
 SRCS  = Core/main.c
 SRCS += Core/Kernel/app_manager.c
 SRCS += Core/Kernel/event_system.c
@@ -36,8 +50,11 @@ SRCS += Drivers/ir/ir_rx.c
 SRCS += UI/cli/shell.c
 SRCS += Plugins/plugin_loader.c
 
+# All Sources
+ALL_SRCS = $(SRCS) $(FREERTOS_SRCS)
+
 # Object Files
-OBJS = $(SRCS:.c=.o)
+OBJS = $(ALL_SRCS:.c=.o)
 
 # Build
 all: $(TARGET).elf
