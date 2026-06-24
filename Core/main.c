@@ -6,7 +6,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "Config/foxm_config.h"
+#include "foxm_config.h"
 
 /* ---- Task Prototypes ---- */
 void Task_Event(void *pvParameters);
