@@ -21,13 +21,17 @@ SECTIONS
 
     .data :
     {
+        _sdata = .;
         *(.data*)
+        _edata = .;
     } > RAM AT > FLASH
 
     .bss :
     {
+        __bss_start__ = .;
         *(.bss*)
         *(COMMON)
+        __bss_end__ = .;
     } > RAM
 
     .heap :
