@@ -61,7 +61,7 @@ OBJS = $(ALL_SRCS:.c=.o)
 all: $(TARGET).elf
 
 $(TARGET).elf: $(OBJS)
-	$(CC) $(CPU_FLAGS) $(OBJS) --specs=nosys.specs -T Core/linker.ld -o $@
+	$(CC) $(CPU_FLAGS) $(OBJS) --specs=nano.specs --specs=nosys.specs -T Core/linker.ld -o $@
 	$(SIZE) $@
 
 %.o: %.c
