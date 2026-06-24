@@ -12,7 +12,7 @@ SIZE    = arm-none-eabi-size
 TARGET = foxm-os
 
 # CPU Flags (STM32F4 = Cortex-M4 with FPU)
-CPU_FLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+CPU_FLAGS = -mcpu=cortex-m3 -mthumb
 
 # Compiler Flags
 CFLAGS  = $(CPU_FLAGS) -O0 -g -Wall
