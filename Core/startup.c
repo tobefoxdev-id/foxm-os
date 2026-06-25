@@ -5,48 +5,48 @@
 
 #include <stdint.h>
 
-/* Stack size */
-#define STACK_SIZE 4096
-static uint32_t stack[STACK_SIZE];
+/* Stack */
+#define STACK_SIZE 8192
+static uint32_t stack[STACK_SIZE] __attribute__((aligned(8)));
 
 /* Forward declarations */
 extern int main(void);
 void Reset_Handler(void);
 void Default_Handler(void);
 
-/* Weak aliases for interrupt handlers */
+/* FreeRTOS handlers - defined in port.c */
+extern void xPortPendSVHandler(void);
+extern void xPortSysTickHandler(void);
+extern void vPortSVCHandler(void);
+
+/* Fault Handlers */
 void NMI_Handler(void)          __attribute__((weak, alias("Default_Handler")));
 void HardFault_Handler(void)    __attribute__((weak, alias("Default_Handler")));
 void MemManage_Handler(void)    __attribute__((weak, alias("Default_Handler")));
 void BusFault_Handler(void)     __attribute__((weak, alias("Default_Handler")));
 void UsageFault_Handler(void)   __attribute__((weak, alias("Default_Handler")));
-void SVC_Handler(void)          __attribute__((weak, alias("Default_Handler")));
-void PendSV_Handler(void)       __attribute__((weak, alias("Default_Handler")));
-void SysTick_Handler(void)      __attribute__((weak, alias("Default_Handler")));
 
 /* Vector Table */
 __attribute__((section(".vectors")))
 void (*const vector_table[])(void) = {
     (void (*)(void))((uint32_t)stack + sizeof(stack)), /* Initial SP */
-    Reset_Handler,
-    NMI_Handler,
-    HardFault_Handler,
-    MemManage_Handler,
-    BusFault_Handler,
-    UsageFault_Handler,
-    0, 0, 0, 0,
-    SVC_Handler,
-    0, 0,
-    PendSV_Handler,
-    SysTick_Handler,
+    Reset_Handler,          /* Reset */
+    NMI_Handler,            /* NMI */
+    HardFault_Handler,      /* HardFault */
+    MemManage_Handler,      /* MemManage */
+    BusFault_Handler,       /* BusFault */
+    UsageFault_Handler,     /* UsageFault */
+    0, 0, 0, 0,             /* Reserved */
+    vPortSVCHandler,        /* SVC - FreeRTOS */
+    0, 0,                   /* Reserved */
+    xPortPendSVHandler,     /* PendSV - FreeRTOS */
+    xPortSysTickHandler,    /* SysTick - FreeRTOS */
 };
 
 /* Reset Handler */
 void Reset_Handler(void)
 {
-    /* Call main */
     main();
-    /* Loop forever if main returns */
     while (1);
 }
 
