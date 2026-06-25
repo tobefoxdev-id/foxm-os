@@ -7,6 +7,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "foxm_config.h"
+#include "event_system.h"
 
 /* UART0 mps2-an385 */
 #define UART0_BASE  0x40004000
@@ -40,8 +41,11 @@ int main(void)
     uart_print("  Dev    : ToBeFox.Dev                  \r\n");
     uart_print("==========================================\r\n\r\n");
 
-    uart_print("[BOOT] Creating FreeRTOS tasks...\r\n");
+    uart_print("[BOOT] Initializing Event System...\r\n");
+    EventSystem_Init();
+    uart_print("[BOOT] Event System OK!\r\n\r\n");
 
+    uart_print("[BOOT] Creating FreeRTOS tasks...\r\n");
     xTaskCreate(Task_Event, "Event_Task", STACK_EVENT, NULL, PRIORITY_EVENT, NULL);
     xTaskCreate(Task_IR,    "IR_Task",    STACK_IR,    NULL, PRIORITY_IR,    NULL);
     xTaskCreate(Task_BT,    "BT_Task",    STACK_BT,    NULL, PRIORITY_BT,    NULL);
@@ -50,7 +54,6 @@ int main(void)
     xTaskCreate(Task_Power, "Power_Task", STACK_POWER, NULL, PRIORITY_POWER, NULL);
 
     uart_print("[BOOT] Starting FreeRTOS scheduler...\r\n\r\n");
-
     vTaskStartScheduler();
 
     uart_print("[ERROR] Scheduler failed!\r\n");
@@ -62,19 +65,68 @@ int main(void)
  * ============================================ */
 void Task_Event(void *pvParameters)
 {
+    FoxEvent_t event;
     uart_print("[TASK] Event_Task  -> Running\r\n");
-    for (;;) vTaskDelay(pdMS_TO_TICKS(10));
+
+    for (;;)
+    {
+        /* Wait for events and distribute */
+        if (EventSystem_Receive(&event, pdMS_TO_TICKS(100)) == pdTRUE)
+        {
+            uart_print("[EVENT] Received event -> distributing\r\n");
+
+            switch (event.id)
+            {
+                case EVENT_IR_RECEIVED:
+                    uart_print("[EVENT] IR signal received!\r\n");
+                    break;
+                case EVENT_BT_CONNECTED:
+                    uart_print("[EVENT] Bluetooth connected!\r\n");
+                    break;
+                case EVENT_POWER_LOW:
+                    uart_print("[EVENT] Power low warning!\r\n");
+                    break;
+                default:
+                    uart_print("[EVENT] Unknown event\r\n");
+                    break;
+            }
+        }
+    }
 }
 
 void Task_IR(void *pvParameters)
 {
     uart_print("[TASK] IR_Task     -> Running\r\n");
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    /* Send demo IR event */
+    FoxEvent_t event = {
+        .id     = EVENT_IR_RECEIVED,
+        .source = TASK_IR,
+        .target = TASK_EVENT,
+        .data   = 0xAB
+    };
+    EventSystem_Send(&event);
+    uart_print("[IR] Signal captured, event sent!\r\n");
+
     for (;;) vTaskDelay(pdMS_TO_TICKS(50));
 }
 
 void Task_BT(void *pvParameters)
 {
     uart_print("[TASK] BT_Task     -> Running\r\n");
+    vTaskDelay(pdMS_TO_TICKS(800));
+
+    /* Send demo BT event */
+    FoxEvent_t event = {
+        .id     = EVENT_BT_CONNECTED,
+        .source = TASK_BT,
+        .target = TASK_EVENT,
+        .data   = 0x01
+    };
+    EventSystem_Send(&event);
+    uart_print("[BT] Connected, event sent!\r\n");
+
     for (;;) vTaskDelay(pdMS_TO_TICKS(100));
 }
 
@@ -93,5 +145,17 @@ void Task_UI(void *pvParameters)
 void Task_Power(void *pvParameters)
 {
     uart_print("[TASK] Power_Task  -> Running\r\n");
+    vTaskDelay(pdMS_TO_TICKS(1200));
+
+    /* Send demo power low event */
+    FoxEvent_t event = {
+        .id     = EVENT_POWER_LOW,
+        .source = TASK_POWER,
+        .target = TASK_EVENT,
+        .data   = 15
+    };
+    EventSystem_Send(&event);
+    uart_print("[POWER] Battery low, event sent!\r\n");
+
     for (;;) vTaskDelay(pdMS_TO_TICKS(1000));
 }
