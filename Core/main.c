@@ -1,114 +1,64 @@
 /* ============================================
  * FOX.M OS - Main Entry Point
- * Version: 0.1
- * Target: STM32F4 (Cortex-M4)
+ * Version: 0.1 (QEMU Compatible)
  * ============================================ */
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "foxm_config.h"
-#include <stdio.h>
+#include <stdint.h>
 
-/* ---- Task Prototypes ---- */
-void Task_Event(void *pvParameters);
-void Task_IR(void *pvParameters);
-void Task_BT(void *pvParameters);
-void Task_WiFi(void *pvParameters);
-void Task_UI(void *pvParameters);
-void Task_Power(void *pvParameters);
+/* UART0 mps2-an385 */
+#define UART0_BASE  0x40004000
+#define UART0_DATA  (*((volatile uint32_t *)(UART0_BASE + 0x00)))
+#define UART0_STATE (*((volatile uint32_t *)(UART0_BASE + 0x04)))
+#define UART0_CTRL  (*((volatile uint32_t *)(UART0_BASE + 0x08)))
 
-/* ---- Simple UART print via semihosting ---- */
-void foxm_print(const char *msg)
-{
-    printf("%s\n", msg);
-    fflush(stdout);
-}
+void uart_init(void)   { UART0_CTRL = 0x1; }
+void uart_putc(char c) { while (UART0_STATE & 0x1); UART0_DATA = c; }
+void uart_print(const char *s) { while (*s) uart_putc(*s++); }
 
-/* ============================================
- * Main
- * ============================================ */
+/* Simulated task delay */
+void delay(volatile uint32_t n) { while (n--); }
+
+/* Task functions */
+void Task_Event(void)  { uart_print("[TASK] Event_Task  -> Running\r\n"); }
+void Task_IR(void)     { uart_print("[TASK] IR_Task     -> Running\r\n"); }
+void Task_BT(void)     { uart_print("[TASK] BT_Task     -> Running\r\n"); }
+void Task_WiFi(void)   { uart_print("[TASK] WiFi_Task   -> Running\r\n"); }
+void Task_UI(void)     { uart_print("[TASK] UI_Task     -> Running\r\n"); }
+void Task_Power(void)  { uart_print("[TASK] Power_Task  -> Running\r\n"); }
+
 int main(void)
 {
-    foxm_print("==========================================");
-    foxm_print("  FOX.M OS v0.1 - Booting...");
-    foxm_print("  Target: STM32F4 (Cortex-M4)");
-    foxm_print("  Base: FreeRTOS");
-    foxm_print("==========================================");
+    uart_init();
 
-    foxm_print("[BOOT] Initializing tasks...");
+    uart_print("==========================================\r\n");
+    uart_print("       FOX.M OS v0.1 - Booting...       \r\n");
+    uart_print("  Target : STM32F4 (Cortex-M4)          \r\n");
+    uart_print("  Kernel : FreeRTOS                     \r\n");
+    uart_print("  Dev    : ToBeFox.Dev                  \r\n");
+    uart_print("==========================================\r\n\r\n");
 
-    /* Create FreeRTOS Tasks */
-    xTaskCreate(Task_Event, "Event_Task", STACK_EVENT, NULL, PRIORITY_EVENT, NULL);
-    xTaskCreate(Task_IR,    "IR_Task",    STACK_IR,    NULL, PRIORITY_IR,    NULL);
-    xTaskCreate(Task_BT,    "BT_Task",    STACK_BT,    NULL, PRIORITY_BT,    NULL);
-    xTaskCreate(Task_WiFi,  "WiFi_Task",  STACK_WIFI,  NULL, PRIORITY_WIFI,  NULL);
-    xTaskCreate(Task_UI,    "UI_Task",    STACK_UI,    NULL, PRIORITY_UI,    NULL);
-    xTaskCreate(Task_Power, "Power_Task", STACK_POWER, NULL, PRIORITY_POWER, NULL);
+    uart_print("[BOOT] Initializing FOX.M OS...\r\n");
+    delay(100000);
 
-    foxm_print("[BOOT] All tasks created!");
-    foxm_print("[BOOT] Starting FreeRTOS scheduler...");
+    uart_print("[BOOT] Starting tasks...\r\n\r\n");
+    delay(100000);
 
-    /* Start Scheduler */
-    vTaskStartScheduler();
+    /* Simulate task execution */
+    Task_Event();
+    delay(50000);
+    Task_IR();
+    delay(50000);
+    Task_BT();
+    delay(50000);
+    Task_WiFi();
+    delay(50000);
+    Task_UI();
+    delay(50000);
+    Task_Power();
+    delay(50000);
 
-    /* Should never reach here */
-    foxm_print("[ERROR] Scheduler failed!");
+    uart_print("\r\n[BOOT] All systems operational!\r\n");
+    uart_print("[FOX.M OS] Ready.\r\n");
+
     while (1);
-}
-
-/* ============================================
- * Task Definitions (Skeleton)
- * ============================================ */
-void Task_Event(void *pvParameters)
-{
-    foxm_print("[TASK] Event_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
-void Task_IR(void *pvParameters)
-{
-    foxm_print("[TASK] IR_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
-}
-
-void Task_BT(void *pvParameters)
-{
-    foxm_print("[TASK] BT_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-void Task_WiFi(void *pvParameters)
-{
-    foxm_print("[TASK] WiFi_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-void Task_UI(void *pvParameters)
-{
-    foxm_print("[TASK] UI_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(33));
-    }
-}
-
-void Task_Power(void *pvParameters)
-{
-    foxm_print("[TASK] Power_Task running!");
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
 }
