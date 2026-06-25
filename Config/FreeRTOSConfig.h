@@ -54,4 +54,8 @@
 #define configKERNEL_INTERRUPT_PRIORITY         ( configLIBRARY_LOWEST_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 
+/* Disable tickless idle for QEMU compatibility */
+#define configUSE_TICKLESS_IDLE         0
+#define configOVERRIDE_DEFAULT_TICK_CONFIGURATION 1
+
 #endif /* FREERTOS_CONFIG_H */

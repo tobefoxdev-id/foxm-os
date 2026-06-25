@@ -50,6 +50,7 @@ SRCS += Drivers/ir/ir_tx.c
 SRCS += Drivers/ir/ir_rx.c
 SRCS += UI/cli/shell.c
 SRCS += Plugins/plugin_loader.c
+SRCS += Core/freertos_hooks.c
 
 # All Sources
 ALL_SRCS = $(SRCS) $(FREERTOS_SRCS)
