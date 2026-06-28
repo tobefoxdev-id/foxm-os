@@ -31,9 +31,9 @@ void IR_TX_SendNEC(uint8_t address, uint8_t command)
     tx_buffer.address  = address;
     tx_buffer.command  = command;
     tx_buffer.raw_data = ((uint32_t)address << 24) |
-                         ((uint32_t)(~address) << 16) |
+                         ((uint32_t)(address ^ 0xFF) << 16) |
                          ((uint32_t)command << 8) |
-                         ((uint32_t)(~command));
+                         ((uint32_t)(command ^ 0xFF));
     tx_ready = 1;
 
     uart_print("[IR_TX] Sending NEC signal\r\n");
