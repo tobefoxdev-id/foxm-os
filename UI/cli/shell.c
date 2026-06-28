@@ -11,8 +11,11 @@
 #define UART0_DATA  (*((volatile uint32_t *)(UART0_BASE + 0x00)))
 #define UART0_STATE (*((volatile uint32_t *)(UART0_BASE + 0x04)))
 #define UART0_CTRL  (*((volatile uint32_t *)(UART0_BASE + 0x08)))
-#define UART0_RX    (*((volatile uint32_t *)(UART0_BASE + 0x00)))
-#define UART0_RXST  (*((volatile uint32_t *)(UART0_BASE + 0x04)))
+#define UART0_INTSTATUS (*((volatile uint32_t *)(UART0_BASE + 0x0C)))
+#define UART0_BAUDDIV   (*((volatile uint32_t *)(UART0_BASE + 0x10)))
+
+#define UART0_RX    UART0_DATA
+#define UART0_RXST  UART0_STATE
 
 static void uart_putc(char c) { while (UART0_STATE & 0x1); UART0_DATA = c; }
 
@@ -150,7 +153,7 @@ void Shell_Run(void)
     for (;;)
     {
         /* Check UART RX - bit 1 = RX full */
-        if (UART0_RXST & 0x2)
+        if (UART0_STATE & 0x2)
         {
             char c = (char)(UART0_RX & 0xFF);
 
