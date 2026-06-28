@@ -53,12 +53,11 @@ void IR_RX_DecodeNEC(uint32_t raw, IR_Result_t *result)
     result->command  = (raw >> 8)  & 0xFF;
     result->raw_data = raw;
 
-    /* Validate: address + ~address, command + ~command */
     uint8_t addr_inv = (raw >> 16) & 0xFF;
     uint8_t cmd_inv  = (raw >> 0)  & 0xFF;
 
-    result->valid = ((result->address ^ addr_inv) == 0xFF) &&
-                    ((result->command  ^ cmd_inv)  == 0xFF);
+    result->valid = (((result->address + addr_inv) & 0xFF) == 0xFF) &&
+                    (((result->command  + cmd_inv)  & 0xFF) == 0xFF);
 }
 
 void IR_RX_Flush(void)
