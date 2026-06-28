@@ -139,37 +139,26 @@ int str_equal(const char *a, const char *b)
 void Shell_Run(void)
 {
     Shell_Print("\r\nFOX.M OS CLI Ready. Type 'help' for commands.\r\n");
-    Shell_Print("fox.m> ");
+    Shell_Print("fox.m> \r\n");
 
-    for (;;)
-    {
-        /* Check UART RX */
-        if (UART0_RXST & 0x2)
-        {
-            char c = (char)(UART0_RX & 0xFF);
+    /* Demo: simulate user input */
+    vTaskDelay(pdMS_TO_TICKS(200));
+    Shell_Print("help\r\n");
+    Shell_Execute("help");
 
-            if (c == '\r' || c == '\n')
-            {
-                Shell_Print("\r\n");
-                if (input_len > 0)
-                {
-                    input_buf[input_len] = '\0';
-                    Shell_Execute(input_buf);
-                    input_len = 0;
-                }
-                Shell_Print("fox.m> ");
-            }
-            else if (c == '\b' && input_len > 0)
-            {
-                input_len--;
-                Shell_Print("\b \b");
-            }
-            else if (input_len < SHELL_MAX_CMD_LEN - 1)
-            {
-                input_buf[input_len++] = c;
-                uart_putc(c);
-            }
-        }
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
+    vTaskDelay(pdMS_TO_TICKS(200));
+    Shell_Print("fox.m> version\r\n");
+    Shell_Execute("version");
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+    Shell_Print("fox.m> status\r\n");
+    Shell_Execute("status");
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+    Shell_Print("fox.m> ir\r\n");
+    Shell_Execute("ir");
+
+    Shell_Print("\r\nfox.m> ");
+
+    for (;;) vTaskDelay(pdMS_TO_TICKS(1000));
 }
