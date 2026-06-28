@@ -10,6 +10,7 @@
 #include "event_system.h"
 #include "ir_tx.h"
 #include "ir_rx.h"
+#include "shell.h"
 
 /* UART0 mps2-an385 */
 #define UART0_BASE  0x40004000
@@ -58,7 +59,11 @@ int main(void)
     uart_print("[BOOT] Initializing IR Driver...\r\n");
     IR_TX_Init();
     IR_RX_Init();
-    uart_print("[BOOT] IR Driver OK!\r\n\r\n");
+    uart_print("[BOOT] IR Driver OK!\r\n");
+
+    uart_print("[BOOT] Initializing CLI Shell...\r\n");
+    Shell_Init();
+    uart_print("[BOOT] CLI Shell OK!\r\n\r\n");
 
     uart_print("[BOOT] Creating FreeRTOS tasks...\r\n");
     xTaskCreate(Task_Event, "Event_Task", STACK_EVENT, NULL, PRIORITY_EVENT, NULL);
@@ -112,14 +117,11 @@ void Task_IR(void *pvParameters)
     uart_print("[TASK] IR_Task     -> Running\r\n");
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    /* Simulate IR TX - send NEC signal */
     uart_print("[IR] Transmitting NEC signal (addr=0x01, cmd=0x45)...\r\n");
     IR_TX_SendNEC(0x01, 0x45);
 
-    /* Small delay then check RX */
     vTaskDelay(pdMS_TO_TICKS(100));
 
-    /* Simulate IR RX - loopback */
     if (IR_RX_IsDataAvailable())
     {
         IR_Result_t result;
@@ -129,14 +131,11 @@ void Task_IR(void *pvParameters)
         uart_print("[IR] Protocol : NEC\r\n");
         uart_print("[IR] Address  : ");
         uart_print_hex(result.address);
-        uart_print("\r\n");
-        uart_print("[IR] Command  : ");
+        uart_print("\r\n[IR] Command  : ");
         uart_print_hex(result.command);
-        uart_print("\r\n");
-        uart_print("[IR] Valid    : ");
+        uart_print("\r\n[IR] Valid    : ");
         uart_print(result.valid ? "YES\r\n" : "NO\r\n");
 
-        /* Send event to Event_Task */
         FoxEvent_t event = {
             .id     = EVENT_IR_RECEIVED,
             .source = TASK_IR,
@@ -175,7 +174,8 @@ void Task_WiFi(void *pvParameters)
 void Task_UI(void *pvParameters)
 {
     uart_print("[TASK] UI_Task     -> Running\r\n");
-    for (;;) vTaskDelay(pdMS_TO_TICKS(33));
+    /* Run CLI shell */
+    Shell_Run();
 }
 
 void Task_Power(void *pvParameters)
