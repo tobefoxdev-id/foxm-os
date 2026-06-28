@@ -3,8 +3,36 @@
 
 #include <stdint.h>
 
-void IR_TX_Init(void);
-void IR_TX_Send(uint32_t *data, uint16_t length);
-void IR_TX_SendNEC(uint8_t address, uint8_t command);
+/* ============================================
+ * FOX.M OS - IR Transmitter Driver
+ * ============================================ */
 
-#endif
+/* IR Protocols */
+#define IR_PROTOCOL_NEC     0x01
+#define IR_PROTOCOL_SONY    0x02
+#define IR_PROTOCOL_RC5     0x03
+#define IR_PROTOCOL_RAW     0xFF
+
+/* NEC Protocol timing (microseconds) */
+#define NEC_HEADER_MARK     9000
+#define NEC_HEADER_SPACE    4500
+#define NEC_BIT_MARK        562
+#define NEC_ONE_SPACE       1687
+#define NEC_ZERO_SPACE      562
+#define NEC_REPEAT_SPACE    2250
+
+/* IR TX struct */
+typedef struct {
+    uint8_t  protocol;
+    uint8_t  address;
+    uint8_t  command;
+    uint32_t raw_data;
+} IR_Signal_t;
+
+/* API */
+void IR_TX_Init(void);
+void IR_TX_Send(IR_Signal_t *signal);
+void IR_TX_SendNEC(uint8_t address, uint8_t command);
+void IR_TX_SendRaw(uint32_t *data, uint16_t length);
+
+#endif /* IR_TX_H */

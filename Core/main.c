@@ -8,6 +8,8 @@
 #include "task.h"
 #include "foxm_config.h"
 #include "event_system.h"
+#include "ir_tx.h"
+#include "ir_rx.h"
 
 /* UART0 mps2-an385 */
 #define UART0_BASE  0x40004000
@@ -18,6 +20,14 @@
 void uart_init(void)   { UART0_CTRL = 0x1; }
 void uart_putc(char c) { while (UART0_STATE & 0x1); UART0_DATA = c; }
 void uart_print(const char *s) { while (*s) uart_putc(*s++); }
+
+void uart_print_hex(uint32_t val)
+{
+    const char hex[] = "0123456789ABCDEF";
+    uart_print("0x");
+    for (int i = 28; i >= 0; i -= 4)
+        uart_putc(hex[(val >> i) & 0xF]);
+}
 
 /* ---- Task Prototypes ---- */
 void Task_Event(void *pvParameters);
@@ -43,7 +53,12 @@ int main(void)
 
     uart_print("[BOOT] Initializing Event System...\r\n");
     EventSystem_Init();
-    uart_print("[BOOT] Event System OK!\r\n\r\n");
+    uart_print("[BOOT] Event System OK!\r\n");
+
+    uart_print("[BOOT] Initializing IR Driver...\r\n");
+    IR_TX_Init();
+    IR_RX_Init();
+    uart_print("[BOOT] IR Driver OK!\r\n\r\n");
 
     uart_print("[BOOT] Creating FreeRTOS tasks...\r\n");
     xTaskCreate(Task_Event, "Event_Task", STACK_EVENT, NULL, PRIORITY_EVENT, NULL);
@@ -70,15 +85,14 @@ void Task_Event(void *pvParameters)
 
     for (;;)
     {
-        /* Wait for events and distribute */
         if (EventSystem_Receive(&event, pdMS_TO_TICKS(100)) == pdTRUE)
         {
-            uart_print("[EVENT] Received event -> distributing\r\n");
-
             switch (event.id)
             {
                 case EVENT_IR_RECEIVED:
-                    uart_print("[EVENT] IR signal received!\r\n");
+                    uart_print("[EVENT] IR signal received! Data: ");
+                    uart_print_hex(event.data);
+                    uart_print("\r\n");
                     break;
                 case EVENT_BT_CONNECTED:
                     uart_print("[EVENT] Bluetooth connected!\r\n");
@@ -87,7 +101,6 @@ void Task_Event(void *pvParameters)
                     uart_print("[EVENT] Power low warning!\r\n");
                     break;
                 default:
-                    uart_print("[EVENT] Unknown event\r\n");
                     break;
             }
         }
@@ -99,15 +112,39 @@ void Task_IR(void *pvParameters)
     uart_print("[TASK] IR_Task     -> Running\r\n");
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    /* Send demo IR event */
-    FoxEvent_t event = {
-        .id     = EVENT_IR_RECEIVED,
-        .source = TASK_IR,
-        .target = TASK_EVENT,
-        .data   = 0xAB
-    };
-    EventSystem_Send(&event);
-    uart_print("[IR] Signal captured, event sent!\r\n");
+    /* Simulate IR TX - send NEC signal */
+    uart_print("[IR] Transmitting NEC signal (addr=0x01, cmd=0x45)...\r\n");
+    IR_TX_SendNEC(0x01, 0x45);
+
+    /* Small delay then check RX */
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    /* Simulate IR RX - loopback */
+    if (IR_RX_IsDataAvailable())
+    {
+        IR_Result_t result;
+        IR_RX_Read(&result);
+
+        uart_print("[IR] Signal received!\r\n");
+        uart_print("[IR] Protocol : NEC\r\n");
+        uart_print("[IR] Address  : ");
+        uart_print_hex(result.address);
+        uart_print("\r\n");
+        uart_print("[IR] Command  : ");
+        uart_print_hex(result.command);
+        uart_print("\r\n");
+        uart_print("[IR] Valid    : ");
+        uart_print(result.valid ? "YES\r\n" : "NO\r\n");
+
+        /* Send event to Event_Task */
+        FoxEvent_t event = {
+            .id     = EVENT_IR_RECEIVED,
+            .source = TASK_IR,
+            .target = TASK_EVENT,
+            .data   = result.raw_data
+        };
+        EventSystem_Send(&event);
+    }
 
     for (;;) vTaskDelay(pdMS_TO_TICKS(50));
 }
@@ -117,7 +154,6 @@ void Task_BT(void *pvParameters)
     uart_print("[TASK] BT_Task     -> Running\r\n");
     vTaskDelay(pdMS_TO_TICKS(800));
 
-    /* Send demo BT event */
     FoxEvent_t event = {
         .id     = EVENT_BT_CONNECTED,
         .source = TASK_BT,
@@ -147,7 +183,6 @@ void Task_Power(void *pvParameters)
     uart_print("[TASK] Power_Task  -> Running\r\n");
     vTaskDelay(pdMS_TO_TICKS(1200));
 
-    /* Send demo power low event */
     FoxEvent_t event = {
         .id     = EVENT_POWER_LOW,
         .source = TASK_POWER,
