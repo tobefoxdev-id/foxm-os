@@ -14,8 +14,9 @@ LVGL_SRCS = $(shell find $(LVGL_DIR)/src -name "*.c")
 
 # LV Drivers
 LV_DRV_DIR = UI/gui/lv_drivers
-LV_DRV_SRCS = $(LV_DRV_DIR)/display/monitor.c \
-              $(LV_DRV_DIR)/indev/mouse.c
+LV_DRV_SRCS = $(LV_DRV_DIR)/sdl/sdl.c \
+              $(LV_DRV_DIR)/sdl/sdl_common.c \
+              $(LV_DRV_DIR)/sdl/sdl_gpu.c
 
 # Project GUI sources
 GUI_SRCS = UI/gui/foxm_gui.c \
@@ -28,6 +29,7 @@ ALL_SRCS = $(LVGL_SRCS) $(LV_DRV_SRCS) $(GUI_SRCS)
 INCLUDES = -IUI/gui \
            -IUI/gui/lvgl \
            -IUI/gui/lv_drivers \
+           -IUI/gui/lv_drivers/sdl \
            -IConfig
 
 # Compiler flags
