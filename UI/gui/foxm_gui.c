@@ -7,6 +7,7 @@
 #include "sdl_drv/sdl_drv.h"
 #include "foxm_gui.h"
 #include <unistd.h>
+#include <SDL2/SDL.h>
 
 /* Display buffer */
 static lv_color_t buf1[480 * 10];
@@ -91,6 +92,11 @@ void GUI_Run(void)
     /* Main loop */
     while (!sdl_drv_quit_requested())
     {
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT) return;
+        }
         lv_timer_handler();
         lv_tick_inc(5);
         usleep(5000);
