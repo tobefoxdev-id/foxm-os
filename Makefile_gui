@@ -1,0 +1,44 @@
+# ============================================
+# FOX.M OS - GUI Makefile (Linux Simulation)
+# ============================================
+
+CC = gcc
+TARGET = foxm-gui
+
+# SDL2 flags
+SDL_FLAGS = $(shell sdl2-config --cflags --libs)
+
+# LVGL source files
+LVGL_DIR = UI/gui/lvgl
+LVGL_SRCS = $(shell find $(LVGL_DIR)/src -name "*.c")
+
+# LV Drivers
+LV_DRV_DIR = UI/gui/lv_drivers
+LV_DRV_SRCS = $(LV_DRV_DIR)/display/monitor.c \
+              $(LV_DRV_DIR)/indev/mouse.c
+
+# Project GUI sources
+GUI_SRCS = UI/gui/foxm_gui.c \
+           UI/gui/main_gui.c
+
+# All sources
+ALL_SRCS = $(LVGL_SRCS) $(LV_DRV_SRCS) $(GUI_SRCS)
+
+# Include paths
+INCLUDES = -IUI/gui \
+           -IUI/gui/lvgl \
+           -IUI/gui/lv_drivers \
+           -IConfig
+
+# Compiler flags
+CFLAGS = -O0 -g -Wall $(INCLUDES) -DLV_CONF_INCLUDE_SIMPLE
+
+all: $(TARGET)
+
+$(TARGET): $(ALL_SRCS)
+	$(CC) $(CFLAGS) $(ALL_SRCS) $(SDL_FLAGS) -lm -lpthread -o $(TARGET)
+
+clean:
+	rm -f $(TARGET)
+
+.PHONY: all clean
