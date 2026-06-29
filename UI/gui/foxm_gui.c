@@ -7,10 +7,8 @@
 #include "sdl_drv/sdl_drv.h"
 #include "foxm_gui.h"
 #include <unistd.h>
-#include <SDL2/SDL.h>
 
 /* Display buffer */
-static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf1[480 * 10];
 
 /* UI elements */
@@ -28,24 +26,15 @@ void GUI_Init(void)
     lv_init();
     sdl_drv_init();
 
-    /* Setup display buffer */
-    lv_disp_draw_buf_init(&draw_buf, buf1, NULL, 480 * 10);
+    /* Create display */
+    lv_display_t *disp = lv_display_create(480, 320);
+    lv_display_set_flush_cb(disp, sdl_drv_flush);
+    lv_display_set_buffers(disp, buf1, NULL, sizeof(buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    /* Register display driver */
-    static lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res  = 480;
-    disp_drv.ver_res  = 320;
-    disp_drv.flush_cb = sdl_drv_flush;
-    disp_drv.draw_buf = &draw_buf;
-    lv_disp_drv_register(&disp_drv);
-
-    /* Register input driver */
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type    = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = sdl_drv_mouse_read;
-    lv_indev_drv_register(&indev_drv);
+    /* Create input device */
+    lv_indev_t *indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(indev, sdl_drv_mouse_read);
 }
 
 void GUI_Run(void)

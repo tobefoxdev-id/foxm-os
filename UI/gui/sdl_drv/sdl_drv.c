@@ -35,7 +35,7 @@ void sdl_drv_init(void)
     );
 }
 
-void sdl_drv_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
+void sdl_drv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
     /* Process SDL events */
     SDL_Event e;
@@ -51,7 +51,6 @@ void sdl_drv_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_
         if (e.type == SDL_MOUSEBUTTONUP)   mouse_pressed = 0;
     }
 
-    /* Update texture */
     int32_t w = area->x2 - area->x1 + 1;
     int32_t h = area->y2 - area->y1 + 1;
 
@@ -62,15 +61,15 @@ void sdl_drv_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_
         .h = h
     };
 
-    SDL_UpdateTexture(texture, &rect, color_p, w * sizeof(lv_color_t));
+    SDL_UpdateTexture(texture, &rect, px_map, w * 4);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 
-    lv_disp_flush_ready(drv);
+    lv_display_flush_ready(disp);
 }
 
-void sdl_drv_mouse_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
+void sdl_drv_mouse_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
     data->point.x = mouse_x;
     data->point.y = mouse_y;
