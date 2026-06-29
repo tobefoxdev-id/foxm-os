@@ -1,12 +1,13 @@
 /* ============================================
  * FOX.M OS - GUI Implementation
- * LVGL + SDL2 Linux Simulation
+ * LVGL v9 + Custom SDL2 Driver
  * ============================================ */
 
 #include "lvgl/lvgl.h"
-#include "sdl/sdl.h"
+#include "sdl_drv/sdl_drv.h"
 #include "foxm_gui.h"
 #include <unistd.h>
+#include <SDL2/SDL.h>
 
 /* Display buffer */
 static lv_disp_draw_buf_t draw_buf;
@@ -25,7 +26,7 @@ static lv_obj_t *panel_status;
 void GUI_Init(void)
 {
     lv_init();
-    sdl_init();
+    sdl_drv_init();
 
     /* Setup display buffer */
     lv_disp_draw_buf_init(&draw_buf, buf1, NULL, 480 * 10);
@@ -35,7 +36,7 @@ void GUI_Init(void)
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res  = 480;
     disp_drv.ver_res  = 320;
-    disp_drv.flush_cb = sdl_display_flush;
+    disp_drv.flush_cb = sdl_drv_flush;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
@@ -43,7 +44,7 @@ void GUI_Init(void)
     static lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
     indev_drv.type    = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = sdl_mouse_read;
+    indev_drv.read_cb = sdl_drv_mouse_read;
     lv_indev_drv_register(&indev_drv);
 }
 
@@ -99,9 +100,10 @@ void GUI_Run(void)
     lv_obj_align(label_power, LV_ALIGN_TOP_LEFT, 20, 110);
 
     /* Main loop */
-    while (1)
+    while (!sdl_drv_quit_requested())
     {
         lv_timer_handler();
+        lv_tick_inc(5);
         usleep(5000);
     }
 }
