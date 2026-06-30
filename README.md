@@ -16,7 +16,7 @@ Custom embedded OS untuk perangkat handheld multifungsi, terinspirasi dari Flipp
 - Community Plugin System
 
 ## Status
-🚧 Fase 1 — Project Init & Skeleton
+🚧 Fase 7 — IR scanner and BT scanner Complete (But still not testing on real hardware)
 
 ## Developer
 Dibuat oleh **yamato** | ToBeFox.Dev
