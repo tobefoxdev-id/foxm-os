@@ -30,6 +30,8 @@ INCLUDES += -IDrivers/ir
 INCLUDES += -IUI/cli
 INCLUDES += -IPlugins
 INCLUDES += -IConfig
+INCLUDES += -IApps/ir_app
+INCLUDES += -IApps/bt_app
 
 # FreeRTOS Source Files
 FREERTOS_SRCS  = $(FREERTOS)/tasks.c
@@ -51,6 +53,9 @@ SRCS += Drivers/ir/ir_rx.c
 SRCS += UI/cli/shell.c
 SRCS += Plugins/plugin_loader.c
 #SRCS += Core/freertos_hooks.c
+SRCS += Apps/ir_app/ir_scanner.c
+SRCS += Apps/bt_app/bt_scanner.c
+
 
 # All Sources
 ALL_SRCS = $(SRCS) $(FREERTOS_SRCS)

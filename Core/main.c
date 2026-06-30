@@ -1,6 +1,6 @@
 /* ============================================
  * FOX.M OS - Main Entry Point
- * Version: 0.1
+ * Version: 0.1 - COMPLETE
  * Target: STM32F4 (Cortex-M4)
  * ============================================ */
 
@@ -11,6 +11,8 @@
 #include "ir_tx.h"
 #include "ir_rx.h"
 #include "shell.h"
+#include "ir_scanner.h"
+#include "bt_scanner.h"
 
 /* UART0 mps2-an385 */
 #define UART0_BASE  0x40004000
@@ -63,7 +65,12 @@ int main(void)
 
     uart_print("[BOOT] Initializing CLI Shell...\r\n");
     Shell_Init();
-    uart_print("[BOOT] CLI Shell OK!\r\n\r\n");
+    uart_print("[BOOT] CLI Shell OK!\r\n");
+
+    uart_print("[BOOT] Initializing Apps...\r\n");
+    IR_Scanner_Init();
+    BT_Scanner_Init();
+    uart_print("[BOOT] Apps OK!\r\n\r\n");
 
     uart_print("[BOOT] Creating FreeRTOS tasks...\r\n");
     xTaskCreate(Task_Event, "Event_Task", STACK_EVENT, NULL, PRIORITY_EVENT, NULL);
@@ -117,33 +124,17 @@ void Task_IR(void *pvParameters)
     uart_print("[TASK] IR_Task     -> Running\r\n");
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    uart_print("[IR] Transmitting NEC signal (addr=0x01, cmd=0x45)...\r\n");
-    IR_TX_SendNEC(0x01, 0x45);
+    /* Run IR Scanner App */
+    IR_Scanner_Run();
 
-    vTaskDelay(pdMS_TO_TICKS(100));
-
-    if (IR_RX_IsDataAvailable())
-    {
-        IR_Result_t result;
-        IR_RX_Read(&result);
-
-        uart_print("[IR] Signal received!\r\n");
-        uart_print("[IR] Protocol : NEC\r\n");
-        uart_print("[IR] Address  : ");
-        uart_print_hex(result.address);
-        uart_print("\r\n[IR] Command  : ");
-        uart_print_hex(result.command);
-        uart_print("\r\n[IR] Valid    : ");
-        uart_print(result.valid ? "YES\r\n" : "NO\r\n");
-
-        FoxEvent_t event = {
-            .id     = EVENT_IR_RECEIVED,
-            .source = TASK_IR,
-            .target = TASK_EVENT,
-            .data   = result.raw_data
-        };
-        EventSystem_Send(&event);
-    }
+    /* Send event */
+    FoxEvent_t event = {
+        .id     = EVENT_IR_RECEIVED,
+        .source = TASK_IR,
+        .target = TASK_EVENT,
+        .data   = 0x01FE45BA
+    };
+    EventSystem_Send(&event);
 
     for (;;) vTaskDelay(pdMS_TO_TICKS(50));
 }
@@ -151,7 +142,10 @@ void Task_IR(void *pvParameters)
 void Task_BT(void *pvParameters)
 {
     uart_print("[TASK] BT_Task     -> Running\r\n");
-    vTaskDelay(pdMS_TO_TICKS(800));
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    /* Run BT Scanner App */
+    BT_Scanner_Run();
 
     FoxEvent_t event = {
         .id     = EVENT_BT_CONNECTED,
@@ -160,7 +154,6 @@ void Task_BT(void *pvParameters)
         .data   = 0x01
     };
     EventSystem_Send(&event);
-    uart_print("[BT] Connected, event sent!\r\n");
 
     for (;;) vTaskDelay(pdMS_TO_TICKS(100));
 }
@@ -174,14 +167,13 @@ void Task_WiFi(void *pvParameters)
 void Task_UI(void *pvParameters)
 {
     uart_print("[TASK] UI_Task     -> Running\r\n");
-    /* Run CLI shell */
     Shell_Run();
 }
 
 void Task_Power(void *pvParameters)
 {
     uart_print("[TASK] Power_Task  -> Running\r\n");
-    vTaskDelay(pdMS_TO_TICKS(1200));
+    vTaskDelay(pdMS_TO_TICKS(5000));
 
     FoxEvent_t event = {
         .id     = EVENT_POWER_LOW,
